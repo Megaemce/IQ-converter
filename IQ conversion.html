@@ -1,0 +1,163 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-gb">
+    <head>
+        <meta
+            http-equiv="Content-Type"
+            content="text/html; charset=windows-1252"
+        />
+        <title>IQ conversion</title>
+        <script src="js/chart.js"></script>
+        <script src="js/math.js"></script>
+    </head>
+    <body>
+        <div id="container">
+            <div id="content">
+                <div id="head">
+                    <h2 class="comment">Provide your score and the scale</h2>
+                </div>
+                <div id="body">
+                    <object name="IQ-conversion">
+                        <label for="scale-select">Select a scale:</label>
+
+                        <select id="scale-select">
+                            <option value="0">Wechsler</option>
+                            <option value="1">Standford-Binet</option>
+                            <option value="2">Cattell</option>
+                            <option value="3">
+                                Raven advanced (raw score)
+                            </option>
+                            <option value="4">
+                                Raven standard (raw score)
+                            </option>
+                            <option value="5" onselect="setScale(this.value)">
+                                Otis-Lennon
+                            </option>
+                            <option value="6">Percentile</option>
+                        </select>
+                        <label for="score">Provide your score: </label
+                        ><input
+                            type="text"
+                            name="score"
+                            size="9"
+                            defaultValue="100"
+                            maxlength="3"
+                        />
+                        <!-- <form id="iqForm">
+                            <input
+                                type="hidden"
+                                id="lastFocusForm"
+                                value="stanfordBinet"
+                            />
+                            <p>
+                                <label for="stanfordBinet"
+                                    >IQ Stanford-Binet: </label
+                                ><input
+                                    type="text"
+                                    name="stanfordBinet"
+                                    size="9"
+                                    defaultValue="100"
+                                    maxlength="3"
+                                    onfocus="setLastFocus(this.name)"
+                                />
+                            </p>
+                            <p>
+                                <label for="cattell">IQ Cattell: </label
+                                ><input
+                                    type="text"
+                                    name="cattell"
+                                    size="9"
+                                    maxlength="3"
+                                    defaultValue="100"
+                                    onfocus="setLastFocus(this.name)"
+                                />
+                            </p>
+                            <p>
+                                <label for="wechsler">IQ Wechsler: </label
+                                ><input
+                                    type="text"
+                                    name="wechsler"
+                                    size="9"
+                                    maxlength="3"
+                                    defaultValue="100"
+                                    onfocus="setLastFocus(this.name)"
+                                />
+                            </p>
+                            <p>
+                                <label for="stdDev">Standard deviation: </label
+                                ><input
+                                    type="text"
+                                    name="stdDev"
+                                    size="9"
+                                    maxlength="4"
+                                    defaultValue="0"
+                                    onfocus="setLastFocus(this.name)"
+                                />
+                            </p>
+                            <p>
+                                <label for="gre">GRE(V+Q): </label
+                                ><input
+                                    type="text"
+                                    name="gre"
+                                    size="9"
+                                    maxlength="4"
+                                    defaultValue="861"
+                                    onfocus="setLastFocus(this.name)"
+                                />
+                            </p>
+                            <p>
+                                <label for="sat">SAT(&lt;95): </label
+                                ><input
+                                    type="text"
+                                    name="sat"
+                                    size="9"
+                                    maxlength="4"
+                                    defaultValue="940"
+                                    onfocus="setLastFocus(this.name)"
+                                />
+                            </p>
+                            <p>
+                                <label for="percentile">Percentile: </label
+                                ><input
+                                    type="text"
+                                    name="percentile"
+                                    size="9"
+                                    maxlength="5"
+                                    defaultValue="50.0001"
+                                    onfocus="setLastFocus(this.name)"
+                                />
+                            </p>
+                            <p>
+                                <label for="rarity">Rarity (1/X): </label
+                                ><input
+                                    type="text"
+                                    name="rarity"
+                                    size="9"
+                                    maxlength="12"
+                                    defaultValue=" 2"
+                                    onfocus="setLastFocus(this.name)"
+                                />
+                            </p>
+                            <input
+                                type="button"
+                                id="calc"
+                                value="Calculate"
+                                onclick="calculate()"
+                                class="button"
+                            /><input
+                                type="button"
+                                id="clear"
+                                value="Clear"
+                                onclick="clearValues()"
+                                class="button"
+                            />
+                        </form> -->
+                    </object>
+                </div>
+            </div>
+            <hr />
+        </div>
+        <script src="/js/iq-calculator.js" type="text/javascript"></script>
+        <canvas id="myChart"></canvas>
+        <script src="js/iq-chart.js" type="text/javascript"></script>
+    </body>
+</html>
