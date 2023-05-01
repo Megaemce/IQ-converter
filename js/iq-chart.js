@@ -74,11 +74,23 @@ function setScale(value) {
     if (scales[value]) {
         scale = scales[value];
         seedData(scale);
-        myChart.data.labels = labels.flat();
-        myChart.data.datasets[0].data = pdfData.flat();
-        myChart.data.datasets[1].data = betterThan.flat();
-        myChart.data.datasets[1].data = worseThan.flat();
-        myChart.data.datasets[2].data = rarity.flat();
+        myChart.data.labels = xValues;
+        myChart.data.datasets[0].data = pdfData;
+        myChart.data.datasets[1].data = betterThan;
+        myChart.data.datasets[1].data = worseThan;
+        myChart.data.datasets[2].data = rarity;
+        myChart.options.plugins.legend.title.text =
+            `${scale.iqScale ? "IQ" : "Point"}` +
+            " distribution in " +
+            scale.name +
+            "'s scale with value between " +
+            scale.min +
+            "-" +
+            scale.max +
+            " mean " +
+            scale.mean +
+            " and standard deviation of " +
+            scale.stdDev;
         myChart.update();
     }
 }
@@ -152,7 +164,7 @@ function seedData(scale) {
     }
 
     for (let i = scale.min; i <= scale.max; i += scale.step) {
-        const pdfPoint = { x: undefined, y: undefined };
+        const pdfPoint = {};
         const pdfValue = pdf(i); // percentage of people with this value
         const cdfValue = cdf(i); // sum of the pdf values till this value
         const worsePerc = 100 - 100 * cdfValue; // total percentage of people with this value or higher
@@ -188,6 +200,7 @@ function seedData(scale) {
 
 // create the chart
 seedData(scale);
+
 let ctx = document.getElementById("myChart").getContext("2d");
 let myChart = new Chart(ctx, {
     type: "line",
