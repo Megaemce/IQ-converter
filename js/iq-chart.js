@@ -1,3 +1,5 @@
+const pairPoint = {}; // collect pair of points with the same y value
+const population = 8029026082;
 const scales = [
     {
         name: "Wechsler",
@@ -54,43 +56,31 @@ const scales = [
         iqScale: false,
     },
 ];
-const pairPoint = {}; // collect pair of points with the same y value
-const population = 8029026082;
-const leftSigmasLenght = math.floor((scale.mean - scale.min) / scale.stdDev);
-const rightSigmasLenght = math.floor((scale.max - scale.mean) / scale.stdDev);
-// used to not show the data on the grid
-const returnEmptyString = () => {
-    return "";
-};
-
-let scale = setScale(1);
+let scale = scales[0];
 let labels = []; // [...,-2σ,-σ,Average,+σ,Mensa,...]
 let rarity = []; // 1/X
 let xValues = []; // used by chart label setting
 let pdfData = []; // probability density function data
 let worseThan = []; // % of population worse than the result
 let betterThan = []; // & of population better than the result
-let noPeopleWithIQ = []; // number of people with given IQ
+
+// used to not show the data on the grid
+function returnEmptyString() {
+    return "";
+}
 
 // change scale to new value
 function setScale(value) {
-    scale = value;
-}
-
-// add correct label for every standard deviations
-for (let i = -leftSigmasLenght; i <= rightSigmasLenght; i += 1) {
-    const label = {};
-    let labelName = "";
-
-    if (i < 0) labelName = i + "σ";
-    if (i > 0) labelName = "+" + i + "σ";
-    if (i == 0) labelName = "Mean";
-    if (i == 2) labelName = "Mensa";
-
-    label.name = labelName;
-    label.value = scale.mean + i * scale.stdDev;
-
-    labels.push(label);
+    if (scales[value]) {
+        scale = scales[value];
+        seedData(scale);
+        myChart.data.labels = labels.flat();
+        myChart.data.datasets[0].data = pdfData.flat();
+        myChart.data.datasets[1].data = betterThan.flat();
+        myChart.data.datasets[1].data = worseThan.flat();
+        myChart.data.datasets[2].data = rarity.flat();
+        myChart.update();
+    }
 }
 
 // calculate sigma value from given result in specific scale
@@ -109,7 +99,6 @@ function translateScore(score, oldScale, newScale) {
     const result = sigmaToScale(sigma, newScale);
 
     // math.round((score - oldScale.mean) / oldScale.stdDev * newScale.stdDev) + newScale.mean;
-
     return result;
 }
 
@@ -130,41 +119,75 @@ function cdf(x) {
 }
 
 // seeds the data for the plot
-for (let i = scale.min; i <= scale.max; i += scale.step) {
-    const pdfPoint = { x: undefined, y: undefined };
-    const pdfValue = pdf(i); // percentage of people with this value
-    const cdfValue = cdf(i); // sum of the pdf values till this value
-    const worsePerc = 100 - 100 * cdfValue; // total percentage of people with this value or higher
-    const betterPerc = 100 * cdfValue; // total percentage of people with this value or lower
-    const rarityLower = 1 / cdfValue; // rarity below mean
-    const rarityHigher = 1 / (1 - cdfValue); // rarity above mean
+function seedData(scale) {
+    const leftSigmasLenght = math.floor(
+        (scale.mean - scale.min) / scale.stdDev
+    );
+    const rightSigmasLenght = math.floor(
+        (scale.max - scale.mean) / scale.stdDev
+    );
 
-    xValues.push(i);
-    pdfPoint.x = i;
-    pdfPoint.y = Math.round(pdfValue * population);
+    // reset the data
+    labels = []; // [...,-2σ,-σ,Average,+σ,Mensa,...]
+    rarity = []; // 1/X
+    xValues = [];
+    pdfData = []; // probability density function data
+    worseThan = []; // % of population worse than the result
+    betterThan = []; // & of population better than the result
 
-    // collect pair of points with the same y value for scale "defaultY"
-    if (pairPoint[i]) {
-        if (betterPerc !== worsePerc) {
-            pairPoint[i].push(worsePerc);
-            pairPoint[i].push(betterPerc);
-        } else {
-            pairPoint[i].push(betterPerc);
-        }
-    } else {
-        pairPoint[i] = [i];
+    // add correct label for every standard deviations
+    for (let i = -leftSigmasLenght; i <= rightSigmasLenght; i += 1) {
+        const label = {};
+        let labelName = "";
+
+        if (i < 0) labelName = i + "σ";
+        if (i > 0) labelName = "+" + i + "σ";
+        if (i == 0) labelName = "Mean";
+        if (i == 2) labelName = "Mensa";
+
+        label.name = labelName;
+        label.value = scale.mean + i * scale.stdDev;
+
+        labels.push(label);
     }
 
-    // if only one value is pushed it becomes y, which x from default
-    pdfData.push(pdfPoint);
-    worseThan.push(worsePerc);
-    betterThan.push(betterPerc);
+    for (let i = scale.min; i <= scale.max; i += scale.step) {
+        const pdfPoint = { x: undefined, y: undefined };
+        const pdfValue = pdf(i); // percentage of people with this value
+        const cdfValue = cdf(i); // sum of the pdf values till this value
+        const worsePerc = 100 - 100 * cdfValue; // total percentage of people with this value or higher
+        const betterPerc = 100 * cdfValue; // total percentage of people with this value or lower
+        const rarityLower = 1 / cdfValue; // rarity below mean
+        const rarityHigher = 1 / (1 - cdfValue); // rarity above mean
 
-    // belowe mean rarirty comes to 1 and I want to have rarity for those people too
-    i < scale.mean ? rarity.push(rarityLower) : rarity.push(rarityHigher);
+        xValues.push(i);
+        pdfPoint.x = i;
+        pdfPoint.y = Math.round(pdfValue * population);
+
+        // collect pair of points with the same y value for scale "defaultY"
+        if (pairPoint[i]) {
+            if (betterPerc !== worsePerc) {
+                pairPoint[i].push(worsePerc);
+                pairPoint[i].push(betterPerc);
+            } else {
+                pairPoint[i].push(betterPerc);
+            }
+        } else {
+            pairPoint[i] = [i];
+        }
+
+        // if only one value is pushed it becomes y, which x from default
+        pdfData.push(pdfPoint);
+        worseThan.push(worsePerc);
+        betterThan.push(betterPerc);
+
+        // belowe mean rarirty comes to 1 and I want to have rarity for those people too
+        i < scale.mean ? rarity.push(rarityLower) : rarity.push(rarityHigher);
+    }
 }
 
 // create the chart
+seedData(scale);
 let ctx = document.getElementById("myChart").getContext("2d");
 let myChart = new Chart(ctx, {
     type: "line",

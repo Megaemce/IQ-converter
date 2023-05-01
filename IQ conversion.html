@@ -20,16 +20,22 @@
                         <label for="scale-select">Select a scale:</label>
 
                         <select id="scale-select">
-                            <option value="0">Wechsler</option>
-                            <option value="1">Standford-Binet</option>
-                            <option value="2">Cattell</option>
-                            <option value="3">
+                            <option value="0" onchange="setScale(this.value)">
+                                Wechsler
+                            </option>
+                            <option value="1" onchange="setScale(this.value)">
+                                Standford-Binet
+                            </option>
+                            <option value="2" onchange="setScale(this.value)">
+                                Cattell
+                            </option>
+                            <option value="3" onchange="setScale(this.value)">
                                 Raven advanced (raw score)
                             </option>
-                            <option value="4">
+                            <option value="4" onchange="setScale(this.value)">
                                 Raven standard (raw score)
                             </option>
-                            <option value="5" onselect="setScale(this.value)">
+                            <option value="5" onchange="setScale(this.value)">
                                 Otis-Lennon
                             </option>
                             <option value="6">Percentile</option>
