@@ -1,4 +1,3 @@
-const pairPoint = {}; // collect pair of points with the same y value
 const population = 8029026082;
 const scales = [
     {
@@ -63,11 +62,6 @@ let xValues = []; // used by chart label setting
 let pdfData = []; // probability density function data
 let worseThan = []; // % of population worse than the result
 let betterThan = []; // & of population better than the result
-
-// used to not show the data on the grid
-function returnEmptyString() {
-    return "";
-}
 
 // change scale to new value
 function setScale(value) {
@@ -176,18 +170,6 @@ function seedData(scale) {
         pdfPoint.x = i;
         pdfPoint.y = Math.round(pdfValue * population);
 
-        // collect pair of points with the same y value for scale "defaultY"
-        if (pairPoint[i]) {
-            if (betterPerc !== worsePerc) {
-                pairPoint[i].push(worsePerc);
-                pairPoint[i].push(betterPerc);
-            } else {
-                pairPoint[i].push(betterPerc);
-            }
-        } else {
-            pairPoint[i] = [i];
-        }
-
         // if only one value is pushed it becomes y, which x from default
         pdfData.push(pdfPoint);
         worseThan.push(worsePerc);
@@ -200,7 +182,7 @@ function seedData(scale) {
 
 // create the chart
 seedData(scale);
-
+console.log(xValues);
 let ctx = document.getElementById("myChart").getContext("2d");
 let myChart = new Chart(ctx, {
     type: "line",
@@ -319,10 +301,12 @@ let myChart = new Chart(ctx, {
             // X from default scale. Return value that matched ones from labels array
             x: {
                 grid: {
-                    display: true,
+                    display: false,
                     drawTicks: false,
                 },
                 ticks: {
+                    autoSkip: false,
+                    maxRotation: 0,
                     callback: function (value) {
                         const xValue = this.getLabelForValue(value);
                         let omega = "";
@@ -343,10 +327,8 @@ let myChart = new Chart(ctx, {
             // show the sum of the percent of the cases under the curve from given y value
             y: {
                 grid: { display: false },
-                ticks: {
-                    callback: returnEmptyString(),
-                },
-                position: "left",
+                position: "right",
+                display: false,
             },
             // X from betterThan/worseThan scale. Return only values from standard derivation
             // TODO: this is not good approach - this should return like evey 10th or something like this
@@ -370,27 +352,21 @@ let myChart = new Chart(ctx, {
             // Y from betterThan/worseThan scale. Don't show the ticks
             comparisonY: {
                 grid: { display: false },
-                ticks: {
-                    callback: returnEmptyString(),
-                },
-                position: "left",
+                position: "right",
+                display: false,
                 // type: "logarithmic",
             },
             // X from rarity. Don't show the ticks
             rarityX: {
                 grid: { display: false },
-                ticks: {
-                    callback: returnEmptyString(),
-                },
+                display: false,
                 position: "bottom",
             },
             // Y from rarity. Don't show the ticks
             rarityY: {
                 grid: { display: false },
                 type: "logarithmic",
-                ticks: {
-                    callback: returnEmptyString(),
-                },
+                display: false,
                 position: "left",
             },
         },
