@@ -77,8 +77,8 @@ function setScale(value) {
         myChart.data.labels = xValues;
         myChart.data.datasets[0].data = pdfData;
         myChart.data.datasets[1].data = betterThan;
-        myChart.data.datasets[1].data = worseThan;
-        myChart.data.datasets[2].data = rarity;
+        myChart.data.datasets[2].data = worseThan;
+        myChart.data.datasets[3].data = rarity;
         myChart.options.plugins.legend.title.text =
             `${scale.iqScale ? "IQ" : "Point"}` +
             " distribution in " +
