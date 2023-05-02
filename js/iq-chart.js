@@ -188,7 +188,6 @@ function seedData(scale) {
 
 // create the chart
 seedData(scale);
-console.log(xValues);
 let ctx = document.getElementById("myChart").getContext("2d");
 let myChart = new Chart(ctx, {
     type: "line",
@@ -349,7 +348,6 @@ let myChart = new Chart(ctx, {
                 grid: { display: false },
                 position: "right",
                 display: false,
-                // type: "logarithmic",
             },
             // X from rarity. Don't show the ticks
             rarityX: {
@@ -360,9 +358,9 @@ let myChart = new Chart(ctx, {
             // Y from rarity. Don't show the ticks
             rarityY: {
                 grid: { display: false },
-                type: "logarithmic",
                 display: false,
                 position: "left",
+                type: "logarithmic",
             },
         },
     },
