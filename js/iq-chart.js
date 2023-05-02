@@ -63,6 +63,23 @@ let pdfData = []; // probability density function data
 let worseThan = []; // % of population worse than the result
 let betterThan = []; // & of population better than the result
 
+// set legend title based on scale
+function setLegendTitle(scale) {
+    return (
+        `${scale.iqScale ? "IQ" : "Point"}` +
+        " distribution in " +
+        scale.name +
+        "'s scale with value between " +
+        scale.min +
+        "-" +
+        scale.max +
+        " mean " +
+        scale.mean +
+        " and standard deviation of " +
+        scale.stdDev
+    );
+}
+
 // change scale to new value
 function setScale(value) {
     if (scales[value]) {
@@ -73,18 +90,7 @@ function setScale(value) {
         myChart.data.datasets[1].data = betterThan;
         myChart.data.datasets[2].data = worseThan;
         myChart.data.datasets[3].data = rarity;
-        myChart.options.plugins.legend.title.text =
-            `${scale.iqScale ? "IQ" : "Point"}` +
-            " distribution in " +
-            scale.name +
-            "'s scale with value between " +
-            scale.min +
-            "-" +
-            scale.max +
-            " mean " +
-            scale.mean +
-            " and standard deviation of " +
-            scale.stdDev;
+        myChart.options.plugins.legend.title.text = setLegendTitle(scale);
         myChart.update();
     }
 }
@@ -247,18 +253,7 @@ let myChart = new Chart(ctx, {
             legend: {
                 title: {
                     display: true,
-                    text:
-                        `${scale.iqScale ? "IQ" : "Point"}` +
-                        " distribution in " +
-                        scale.name +
-                        "'s scale with value between " +
-                        scale.min +
-                        "-" +
-                        scale.max +
-                        " mean " +
-                        scale.mean +
-                        " and standard deviation of " +
-                        scale.stdDev,
+                    text: setLegendTitle(scale),
                 },
             },
             tooltip: {
