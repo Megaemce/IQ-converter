@@ -279,7 +279,7 @@ let myChart = new Chart(ctx, {
                 order: 3,
             },
             {
-                label: "Rarity (log)",
+                label: "Rarity",
                 data: rarity,
                 radius: 2,
                 borderWidth: 1,
@@ -351,7 +351,7 @@ let myChart = new Chart(ctx, {
                                     .toLocaleString("pl") +
                                 " people"
                             );
-                        } else if (label === "Rarity (log)") {
+                        } else if (label === "Rarity") {
                             return (
                                 label +
                                 ": " +
