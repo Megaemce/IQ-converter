@@ -62,7 +62,7 @@ const scales = [
         stdDev: 15,
         min: 0,
         max: 180,
-        iqScale: true,
+        iqScale: false,
     },
 ];
 const minSlider = document.getElementById("min-slider");
