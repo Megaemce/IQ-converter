@@ -6,7 +6,7 @@
             content="text/html; charset=windows-1252"
         />
         <title>IQ conversion</title>
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script src="js/chart.js"></script>
         <script src="js/math.js"></script>
     </head>
     <body>
@@ -33,22 +33,25 @@
                                 Raven standard (raw score)
                             </option>
                             <option value="5">Otis-Lennon</option>
-                            <option value="6">Percentile</option>
                         </select>
                         <label for="score"> and your score: </label
                         ><input
-                            type="text"
+                            type="number"
                             name="score"
                             size="9"
+                            min="0"
+                            max="254"
                             defaultValue="100"
                             maxlength="3"
+                            oninput="setUserValue(this.value)"
+                            onchange="setUserValue(this.value)"
                         />
                     </object>
                 </div>
             </div>
             <hr />
         </div>
-        <div class="wrapper" style="width: 50%; height: 50%">
+        <div class="wrapper" style="width: 100%; height: 50%">
             <canvas id="myChart"></canvas>
         </div>
         <script src="js/iq-chart.js"></script>

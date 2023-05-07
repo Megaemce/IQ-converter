@@ -55,13 +55,34 @@ const scales = [
         iqScale: false,
     },
 ];
-let scale = scales[0];
+let scale = scales[0]; // default scale is Wechsler
 let labels = []; // [...,-2σ,-σ,Average,+σ,Mensa,...]
 let rarity = []; // 1/X
+let userStd = scoreToSigma(scale.min, scale); // default value is min
 let xValues = []; // used by chart label setting
 let pdfData = []; // probability density function data
 let worseThan = []; // % of population worse than the result
+let userValue = scale.min; // default value is min
 let betterThan = []; // & of population better than the result
+
+function setUserValue(value) {
+    userValue = Math.floor(value);
+    if (userValue >= scale.max) userValue = scale.max;
+    if (userValue <= scale.min) userValue = scale.min;
+
+    console.log(userValue);
+
+    myChart.data.datasets[4].data = [
+        { x: userValue, y: 0 },
+        { x: userValue, y: pdfData[userValue - scale.min].y },
+    ];
+    myChart.data.datasets[4].hidden = false;
+    myChart.options.scales["userScoreX"].display = true;
+
+    // keep std for later scale translation
+    userStd = sigmaValue(userValue, scale);
+    myChart.update();
+}
 
 // set legend title based on scale
 function setLegendTitle(scale) {
@@ -83,16 +104,27 @@ function setLegendTitle(scale) {
 // change scale to new value
 function setScale(value) {
     if (scales[value]) {
-        scale = scales[value];
+        scale = scales[value]; // set global value
         seedData(scale);
+        userValue = Math.round(sigmaToScale(userStd, scale));
+
         myChart.data.labels = xValues;
         myChart.data.datasets[0].data = pdfData;
         myChart.data.datasets[1].data = betterThan;
         myChart.data.datasets[2].data = worseThan;
         myChart.data.datasets[3].data = rarity;
+        myChart.data.datasets[4].data = [
+            { x: userValue, y: 0 },
+            // some scales have min bigger than 0 thus causing pdfData[userValue] to go over its range
+            { x: userValue, y: pdfData[userValue - scale.min].y },
+        ];
         myChart.options.plugins.legend.title.text = setLegendTitle(scale);
         myChart.update();
     }
+}
+
+function scoreToSigma(score, scale) {
+    return (score - scale.mean) / scale.stdDev;
 }
 
 // calculate sigma value from given result in specific scale
@@ -102,7 +134,12 @@ function sigmaValue(score, scale) {
 
 // calculate score/IQ in specific scale from given sigma
 function sigmaToScale(sigma, scale) {
-    return sigma * scale.stdDev + scale.mean;
+    let result = sigma * scale.stdDev + scale.mean;
+
+    if (result >= scale.max) result = scale.max;
+    if (result <= scale.min) result = scale.min;
+
+    return result;
 }
 
 // translate value from one scale to another
@@ -110,7 +147,6 @@ function translateScore(score, oldScale, newScale) {
     const sigma = sigmaValue(score, oldScale);
     const result = sigmaToScale(sigma, newScale);
 
-    // math.round((score - oldScale.mean) / oldScale.stdDev * newScale.stdDev) + newScale.mean;
     return result;
 }
 
@@ -204,15 +240,18 @@ let myChart = new Chart(ctx, {
                     backgroundColor: (ctx) => {
                         let iq = pdfData[ctx.p0DataIndex].x;
                         if (iq < scale.mean - 2 * scale.stdDev)
-                            return "rgba(245, 40, 145, 0.5)";
+                            return "rgba(254, 95, 85,0.5)";
                         if (iq >= scale.mean + 2 * scale.stdDev)
-                            return "rgba(12, 130, 248, 0.5)";
+                            return "rgba(100, 141, 229,0.5)";
 
-                        return "rgba(0,0,0,0.1)";
+                        return "rgba(0,0,0,0.02)";
                     },
                 },
                 xAxisID: "x",
                 yAxisID: "y",
+                borderColor: "#1F80E0",
+                backgroundColor: "#1F80E0",
+                order: 6,
             },
             {
                 label: "Better than",
@@ -221,7 +260,10 @@ let myChart = new Chart(ctx, {
                 borderWidth: 1,
                 xAxisID: "comparisonX",
                 yAxisID: "comparisonY",
-                hidden: false,
+                borderColor: "#7fb685",
+                backgroundColor: "#7fb685",
+                hidden: true,
+                order: 3,
             },
             {
                 label: "Worse than",
@@ -230,7 +272,10 @@ let myChart = new Chart(ctx, {
                 borderWidth: 1,
                 xAxisID: "comparisonX",
                 yAxisID: "comparisonY",
-                hidden: false,
+                borderColor: "#ec4e20",
+                backgroundColor: "#ec4e20",
+                hidden: true,
+                order: 4,
             },
             {
                 label: "Rarity",
@@ -239,7 +284,25 @@ let myChart = new Chart(ctx, {
                 borderWidth: 1,
                 xAxisID: "rarityX",
                 yAxisID: "rarityY",
-                hidden: false,
+                borderColor: "#f2c57c",
+                backgroundColor: "#f2c57c",
+                hidden: true,
+                order: 5,
+            },
+            {
+                label: "Your score",
+                type: "line",
+                data: [
+                    { x: 0, y: 0 },
+                    { x: 0, y: 0 },
+                ],
+                //maxBarThickness: 4,
+                backgroundColor: "#00d4ff",
+                borderColor: "#00d4ff",
+                xAxisID: "userScoreX",
+                yAxisID: "y",
+                order: 9,
+                hidden: true,
             },
         ],
     },
@@ -296,7 +359,6 @@ let myChart = new Chart(ctx, {
             x: {
                 grid: {
                     display: false,
-                    drawTicks: false,
                 },
                 ticks: {
                     autoSkip: false,
@@ -318,49 +380,51 @@ let myChart = new Chart(ctx, {
                 position: "bottom",
             },
             // Y from default scale.
-            // show the sum of the percent of the cases under the curve from given y value
             y: {
-                grid: { display: false },
                 position: "right",
                 display: false,
             },
-            // X from betterThan/worseThan scale. Return only values from standard derivation
-            // TODO: this is not good approach - this should return like evey 10th or something like this
+            // X from betterThan/worseThan scale. Second visible x axes
+            // returns same number of ticks as number of omegas
             comparisonX: {
                 grid: { display: false },
+                border: { display: false },
                 ticks: {
-                    callback: function (value) {
-                        const xValue = this.getLabelForValue(value);
-                        let resultValue;
-
-                        labels.forEach((label) => {
-                            if (label.value == xValue) resultValue = xValue;
-                            return;
-                        });
-
-                        return resultValue;
-                    },
+                    maxTicksLimit: (-scale.min + scale.max) / scale.stdDev,
                 },
                 position: "bottom",
             },
             // Y from betterThan/worseThan scale. Don't show the ticks
             comparisonY: {
-                grid: { display: false },
                 position: "right",
                 display: false,
             },
             // X from rarity. Don't show the ticks
             rarityX: {
-                grid: { display: false },
                 display: false,
                 position: "bottom",
             },
             // Y from rarity. Don't show the ticks
             rarityY: {
-                grid: { display: false },
                 display: false,
                 position: "left",
                 type: "logarithmic",
+            },
+            userScoreX: {
+                position: "top",
+                display: false,
+                border: {
+                    display: false,
+                },
+                grid: { display: true },
+                ticks: {
+                    callback: function (value) {
+                        const xValue = this.getLabelForValue(value);
+
+                        if (xValue === userValue) return `You (${xValue})`;
+                        return undefined;
+                    },
+                },
             },
         },
     },
