@@ -265,42 +265,18 @@ function switchToScale(value) {
     }
 }
 
+// function used on sliders
+function customSliderChangeTo(sliderValue, property) {
+    scale[property] = parseInt(sliderValue);
+    replaceData();
+    if (userOriginalValue) setUserValue(userOriginalValue);
+    myChart.options.plugins.legend.title.text = setLegendTitle(scale);
+    myChart.update();
+}
+
 // * INIT * //
 // create the initial data from default scale
 seedData(scale);
-
-// hookers for the custom slider
-meanSlider.oninput = () => {
-    scale.mean = parseInt(meanSlider.value) / 100;
-    replaceData();
-    if (userOriginalValue) setUserValue(userOriginalValue);
-    myChart.options.plugins.legend.title.text = setLegendTitle(scale);
-    myChart.update();
-};
-
-stdDevSlider.oninput = () => {
-    scale.stdDev = parseInt(stdDevSlider.value) / 100;
-    replaceData();
-    if (userOriginalValue) setUserValue(userOriginalValue);
-    myChart.options.plugins.legend.title.text = setLegendTitle(scale);
-    myChart.update();
-};
-
-minSlider.oninput = () => {
-    scale.min = parseInt(minSlider.value);
-    replaceData();
-    if (userOriginalValue) setUserValue(userOriginalValue);
-    myChart.options.plugins.legend.title.text = setLegendTitle(scale);
-    myChart.update();
-};
-
-maxSlider.oninput = () => {
-    scale.max = parseInt(maxSlider.value);
-    replaceData();
-    if (userOriginalValue) setUserValue(userOriginalValue);
-    myChart.options.plugins.legend.title.text = setLegendTitle(scale);
-    myChart.update();
-};
 
 // create the chart using seeded data
 let ctx = document.getElementById("myChart").getContext("2d");
