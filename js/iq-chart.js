@@ -1,3 +1,4 @@
+// * GLOBAL CONST * //
 const population = 8029026082;
 const scales = [
     {
@@ -28,7 +29,7 @@ const scales = [
         iqScale: true,
     },
     {
-        name: "Raven's advanced progressive matrices",
+        name: "RAPM",
         step: 1,
         mean: 17.2, // original 17
         stdDev: 5.14, // original 5.14
@@ -37,7 +38,7 @@ const scales = [
         iqScale: false,
     },
     {
-        name: "Raven's standard progressive matrices",
+        name: "RSPM",
         step: 1,
         mean: 47,
         stdDev: 4.69,
@@ -55,17 +56,20 @@ const scales = [
         iqScale: false,
     },
 ];
-let scale = scales[0]; // default scale is Wechsler
-let labels = []; // [...,-2σ,-σ,Average,+σ,Mensa,...]
-let rarity = []; // 1/X
-let userStd = scoreToSigma(scale.min, scale); // default value is min
-let xValues = []; // used by chart label setting
-let pdfData = []; // probability density function data
-let worseThan = []; // % of population worse than the result
-let userValue = scale.min; // default value is min
-let betterThan = []; // & of population better than the result
 
-// set legend title based on scale
+// * GLOBAL VARIABLES * //
+let scale = scales[0]; // choosen scale
+let labels = []; // array of labels: [...,-2σ,-σ,Average,+σ,Mensa,...]
+let rarity = []; // array of rarity values
+let userStd = undefined; // user standard deviation
+let xValues = []; // array used by chart label setting
+let pdfData = []; // array of probability density function values
+let worseThan = []; // array of % of population worse than the result values
+let userValue = undefined; // user score default value
+let betterThan = []; // array of % of population better than the result values
+
+// * FUNCTION * //
+// set legend title based on scale. Used when scale is changed
 function setLegendTitle(scale) {
     return (
         `${scale.iqScale ? "IQ" : "Point"}` +
@@ -82,17 +86,12 @@ function setLegendTitle(scale) {
     );
 }
 
-// calculate sigma from the scale in specific scale
+// calculate sigma from given score in specific scale
 function scoreToSigma(score, scale) {
     return (score - scale.mean) / scale.stdDev;
 }
 
-// calculate sigma value from given result in specific scale
-function sigmaValue(score, scale) {
-    return (score - scale.mean) / scale.stdDev;
-}
-
-// calculate score/IQ in specific scale from given sigma
+// calculate score in specific scale from given sigma
 function sigmaToScale(sigma, scale) {
     let result = sigma * scale.stdDev + scale.mean;
 
@@ -102,9 +101,9 @@ function sigmaToScale(sigma, scale) {
     return result;
 }
 
-// translate value from one scale to another
+// convert value from one scale to another
 function convertScore(score, oldScale, newScale) {
-    const sigma = sigmaValue(score, oldScale);
+    const sigma = scoreToSigma(score, oldScale);
     const result = sigmaToScale(sigma, newScale);
 
     return result;
@@ -115,7 +114,9 @@ function pdf(x) {
     const variance = scale.stdDev ** 2;
     const exponent = -((x - scale.mean) ** 2) / (2 * variance);
     const coefficient = 1 / math.sqrt(2 * math.PI * variance);
-    return coefficient * math.exp(exponent);
+    const result = coefficient * math.exp(exponent);
+
+    return result;
 }
 
 // calculate cumulative distribution function (CDF)
@@ -123,10 +124,11 @@ function cdf(x) {
     const arg = (x - scale.mean) / (scale.stdDev * math.sqrt(2));
     const erfValue = math.erf(arg);
     const result = 0.5 * (1 + erfValue);
+
     return result;
 }
 
-// seeds the data for the plot
+// seeds the data for the plot in specific scale
 function seedData(scale) {
     const leftSigmasLenght = math.floor(
         (scale.mean - scale.min) / scale.stdDev
@@ -135,13 +137,13 @@ function seedData(scale) {
         (scale.max - scale.mean) / scale.stdDev
     );
 
-    // reset the data
-    labels = []; // [...,-2σ,-σ,Average,+σ,Mensa,...]
-    rarity = []; // 1/X
+    // seed is used when switching scales hence the need to recalculate the data
+    labels = [];
+    rarity = [];
     xValues = [];
-    pdfData = []; // probability density function data
-    worseThan = []; // % of population worse than the result
-    betterThan = []; // & of population better than the result
+    pdfData = [];
+    worseThan = [];
+    betterThan = [];
 
     // add correct label for every standard deviations
     for (let i = -leftSigmasLenght; i <= rightSigmasLenght; i += 1) {
@@ -159,6 +161,7 @@ function seedData(scale) {
         labels.push(label);
     }
 
+    // seed pdfData, worseThan, betterThan and rarity data
     for (let i = scale.min; i <= scale.max; i += scale.step) {
         const pdfPoint = {};
         const pdfValue = pdf(i); // percentage of people with this value
@@ -168,11 +171,10 @@ function seedData(scale) {
         const rarityLower = 1 / cdfValue; // rarity below mean
         const rarityHigher = 1 / (1 - cdfValue); // rarity above mean
 
-        xValues.push(i);
         pdfPoint.x = i;
         pdfPoint.y = Math.round(pdfValue * population);
 
-        // if only one value is pushed it becomes y, which x from default
+        xValues.push(i);
         pdfData.push(pdfPoint);
         worseThan.push(worsePerc);
         betterThan.push(betterPerc);
@@ -182,13 +184,40 @@ function seedData(scale) {
     }
 }
 
-// switch to the new scale of value
+// set user value on the chart. Used by score input
+function setUserValue(value) {
+    // set the global user value
+    userValue = Math.floor(value);
+    // trim the value if it exceed the scale range
+    if (userValue >= scale.max) userValue = scale.max;
+    if (userValue <= scale.min) userValue = scale.min;
+
+    // push the new line into the chart
+    myChart.data.datasets[4].data = [
+        { x: userValue, y: 0 },
+        { x: userValue, y: pdfData[userValue - scale.min].y },
+    ];
+
+    // by default when the value is not set is hidden
+    myChart.data.datasets[4].hidden = false;
+    myChart.options.scales["userScoreX"].display = true;
+
+    // set global user standard deviation
+    userStd = scoreToSigma(userValue, scale);
+    myChart.update();
+}
+
+// switch to the new scale of given value
 function switchToScale(value) {
     if (scales[value]) {
-        scale = scales[value]; // set global value
+        // set global scale value
+        scale = scales[value];
+        // recalculate the data
         seedData(scale);
+        // convert previous user score to new scale
         userValue = Math.round(sigmaToScale(userStd, scale));
 
+        // push the new data into chart
         myChart.data.labels = xValues;
         myChart.data.datasets[0].data = pdfData;
         myChart.data.datasets[1].data = betterThan;
@@ -196,35 +225,20 @@ function switchToScale(value) {
         myChart.data.datasets[3].data = rarity;
         myChart.data.datasets[4].data = [
             { x: userValue, y: 0 },
-            // some scales have min bigger than 0 thus causing pdfData[userValue] to go over its range
+            // some scales have min ≥ 0 thus causing pdfData[userValue] to exceed its range
             { x: userValue, y: pdfData[userValue - scale.min].y },
         ];
+        // push the new title
         myChart.options.plugins.legend.title.text = setLegendTitle(scale);
         myChart.update();
     }
 }
 
-// set user value on the chart
-function setUserValue(value) {
-    userValue = Math.floor(value);
-    if (userValue >= scale.max) userValue = scale.max;
-    if (userValue <= scale.min) userValue = scale.min;
-
-    myChart.data.datasets[4].data = [
-        { x: userValue, y: 0 },
-        { x: userValue, y: pdfData[userValue - scale.min].y },
-    ];
-    myChart.data.datasets[4].hidden = false;
-    myChart.options.scales["userScoreX"].display = true;
-
-    // keep std for later scale translation
-    userStd = sigmaValue(userValue, scale);
-    myChart.update();
-}
-
-// create the chart
+// * INIT * //
+// create the initial data from default scale
 seedData(scale);
 
+// create the chart using seeded data
 let ctx = document.getElementById("myChart").getContext("2d");
 let myChart = new Chart(ctx, {
     type: "line",
@@ -232,12 +246,13 @@ let myChart = new Chart(ctx, {
         labels: xValues,
         datasets: [
             {
-                label: "Number of people with this IQ",
                 data: pdfData,
-                radius: 2,
                 fill: true,
-                // make bgcolor blue for iq >= +2σ, and red for <= -2σ
+                label: "Number of people with this IQ",
+                order: 6,
+                radius: 2,
                 segment: {
+                    // make bgcolor blue for iq >= +2σ, and red for <= -2σ
                     backgroundColor: (ctx) => {
                         let iq = pdfData[ctx.p0DataIndex].x;
                         if (iq < scale.mean - 2 * scale.stdDev)
@@ -252,61 +267,57 @@ let myChart = new Chart(ctx, {
                 yAxisID: "y",
                 borderColor: "#1F80E0",
                 backgroundColor: "#1F80E0",
-                order: 6,
             },
             {
-                label: "Better than",
                 data: betterThan,
+                label: "Better than",
+                order: 4,
                 radius: 2,
-                borderWidth: 1,
+                hidden: true,
                 xAxisID: "comparisonX",
                 yAxisID: "comparisonY",
+                borderWidth: 1,
                 borderColor: "#7fb685",
                 backgroundColor: "#7fb685",
-                hidden: true,
-                order: 4,
             },
             {
-                label: "Worse than",
                 data: worseThan,
+                label: "Worse than",
+                order: 3,
                 radius: 2,
-                borderWidth: 1,
+                hidden: true,
                 xAxisID: "comparisonX",
                 yAxisID: "comparisonY",
+                borderWidth: 1,
                 borderColor: "#ec4e20",
                 backgroundColor: "#ec4e20",
-                hidden: true,
-                order: 3,
             },
             {
-                label: "Rarity",
                 data: rarity,
+                label: "Rarity",
+                order: 5,
                 radius: 2,
-                borderWidth: 1,
+                hidden: true,
                 xAxisID: "rarityX",
                 yAxisID: "rarityY",
+                borderWidth: 1,
                 borderColor: "#f2c57c",
                 backgroundColor: "#f2c57c",
-                hidden: true,
-                order: 5,
             },
             {
                 label: "Your score",
-                type: "line",
-                data: [
-                    { x: 0, y: 0 },
-                    { x: 0, y: 0 },
-                ],
-                backgroundColor: "#00d4ff",
-                borderColor: "#00d4ff",
+                order: 9,
+                radius: 4,
+                hidden: true,
                 xAxisID: "userScoreX",
                 yAxisID: "y",
-                order: 9,
-                hidden: true,
+                borderColor: "#00d4ff",
+                backgroundColor: "#00d4ff",
             },
         ],
     },
     options: {
+        responsive: true,
         interaction: {
             intersect: false,
             mode: "index",
@@ -329,17 +340,18 @@ let myChart = new Chart(ctx, {
                         size: 12,
                         family: "Verdana, Geneva, Tahoma, sans-serif",
                     },
-                    // borderRadius: 10,
                 },
                 reverse: true,
             },
             tooltip: {
                 callbacks: {
+                    // modify oryginal behavior based on label. Mostly fix number of digits
                     label: function (context) {
-                        let label = context.dataset.label || "";
+                        const label = context.dataset.label || "";
+                        let result = label;
 
                         if (label === "Better than" || label === "Worse than") {
-                            return (
+                            result =
                                 label +
                                 " " +
                                 context.parsed.y.toFixed(5) +
@@ -349,26 +361,26 @@ let myChart = new Chart(ctx, {
                                         (population * context.parsed.y) / 100
                                     )
                                     .toLocaleString("pl") +
-                                " people"
-                            );
+                                " people";
                         } else if (label === "Rarity") {
-                            return (
+                            result =
                                 label +
                                 ": " +
                                 parseInt(
                                     context.parsed.y.toFixed(0)
-                                ).toLocaleString("pl")
-                            );
+                                ).toLocaleString("pl");
+                        } else {
+                            result =
+                                label +
+                                ": " +
+                                context.parsed.y.toLocaleString("pl");
                         }
 
-                        return (
-                            label + ": " + context.parsed.y.toLocaleString("pl")
-                        );
+                        return result;
                     },
                 },
             },
         },
-        responsive: true,
         scales: {
             // X from default scale. Return value that matched ones from labels array
             x: {
@@ -398,7 +410,7 @@ let myChart = new Chart(ctx, {
                 },
                 position: "bottom",
             },
-            // Y from default scale.
+            // Y from default scale
             y: {
                 position: "right",
                 display: false,
@@ -413,22 +425,23 @@ let myChart = new Chart(ctx, {
                 },
                 position: "bottom",
             },
-            // Y from betterThan/worseThan scale. Don't show the ticks
+            // Y from betterThan/worseThan scale. Don't show
             comparisonY: {
                 position: "right",
                 display: false,
             },
-            // X from rarity. Don't show the ticks
+            // X from rarity. Don't show
             rarityX: {
                 display: false,
                 position: "bottom",
             },
-            // Y from rarity. Don't show the ticks
+            // Y from rarity. Don't show
             rarityY: {
                 display: false,
                 position: "left",
                 type: "logarithmic",
             },
+            // X from user score
             userScoreX: {
                 position: "top",
                 display: false,
