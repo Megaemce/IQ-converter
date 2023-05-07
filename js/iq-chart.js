@@ -31,8 +31,8 @@ const scales = [
     {
         name: "RAPM",
         step: 1,
-        mean: 17.2,
-        stdDev: 5.14,
+        mean: 17,
+        stdDev: 5.29,
         min: 0,
         max: 36,
         iqScale: false,
@@ -61,7 +61,7 @@ const scales = [
         mean: 100,
         stdDev: 15,
         min: 0,
-        max: 200,
+        max: 180,
         iqScale: true,
     },
 ];
@@ -242,11 +242,8 @@ function switchToScale(value) {
         // set global scale value
         scale = scales[value];
         // convert previous user score to new scale
-        if (userValue !== userOriginalValue) {
-            userValue = userOriginalValue;
-        } else {
-            userValue = Math.round(sigmaToScale(userStd, scale));
-        }
+        userValue = Math.round(sigmaToScale(userStd, scale));
+
         replaceData();
 
         // user can just switch scales without providing own score
@@ -258,6 +255,7 @@ function switchToScale(value) {
             ];
         }
         // push the new title
+        myChart.options.plugins.legend.title.text = setLegendTitle(scale);
         myChart.update();
     }
 
@@ -275,7 +273,7 @@ seedData(scale);
 meanSlider.oninput = () => {
     scale.mean = parseInt(meanSlider.value) / 100;
     replaceData();
-    setUserValue(userOriginalValue);
+    if (userOriginalValue) setUserValue(userOriginalValue);
     myChart.options.plugins.legend.title.text = setLegendTitle(scale);
     myChart.update();
 };
@@ -283,7 +281,7 @@ meanSlider.oninput = () => {
 stdDevSlider.oninput = () => {
     scale.stdDev = parseInt(stdDevSlider.value) / 100;
     replaceData();
-    setUserValue(userOriginalValue);
+    if (userOriginalValue) setUserValue(userOriginalValue);
     myChart.options.plugins.legend.title.text = setLegendTitle(scale);
     myChart.update();
 };
@@ -291,7 +289,7 @@ stdDevSlider.oninput = () => {
 minSlider.oninput = () => {
     scale.min = parseInt(minSlider.value);
     replaceData();
-    setUserValue(userOriginalValue);
+    if (userOriginalValue) setUserValue(userOriginalValue);
     myChart.options.plugins.legend.title.text = setLegendTitle(scale);
     myChart.update();
 };
@@ -299,7 +297,7 @@ minSlider.oninput = () => {
 maxSlider.oninput = () => {
     scale.max = parseInt(maxSlider.value);
     replaceData();
-    setUserValue(userOriginalValue);
+    if (userOriginalValue) setUserValue(userOriginalValue);
     myChart.options.plugins.legend.title.text = setLegendTitle(scale);
     myChart.update();
 };

@@ -58,16 +58,11 @@ div.wrapper {
     align-items: center;
 }
 
-/* Label for range slider */
-label {
-    margin-bottom: 10px;
-    padding-right: 10px;
-}
-
 /* Slider field container */
 .field {
     display: flex;
     align-items: center;
+    padding-left: 10px;
 }
 
 /* Slider value on left side */
