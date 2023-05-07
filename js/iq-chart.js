@@ -56,9 +56,9 @@ const scales = [
         iqScale: false,
     },
 ];
-const meanValue = document.getElementById("mean-value");
+const minSlider = document.getElementById("min-slider");
+const maxSlider = document.getElementById("max-slider");
 const meanSlider = document.getElementById("mean-slider");
-const stdDevValue = document.getElementById("stdDev-value");
 const stdDevSlider = document.getElementById("stdDev-slider");
 
 // * GLOBAL VARIABLES * //
@@ -259,6 +259,20 @@ meanSlider.oninput = () => {
 
 stdDevSlider.oninput = () => {
     scale.stdDev = parseInt(stdDevSlider.value);
+    replaceData();
+    myChart.options.plugins.legend.title.text = setLegendTitle(scale);
+    myChart.update();
+};
+
+minSlider.oninput = () => {
+    scale.min = parseInt(minSlider.value);
+    replaceData();
+    myChart.options.plugins.legend.title.text = setLegendTitle(scale);
+    myChart.update();
+};
+
+maxSlider.oninput = () => {
+    scale.max = parseInt(maxSlider.value);
     replaceData();
     myChart.options.plugins.legend.title.text = setLegendTitle(scale);
     myChart.update();
