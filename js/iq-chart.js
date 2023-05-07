@@ -55,6 +55,15 @@ const scales = [
         max: 164,
         iqScale: false,
     },
+    {
+        name: "Custom",
+        step: 1,
+        mean: 100,
+        stdDev: 15,
+        min: 0,
+        max: 200,
+        iqScale: true,
+    },
 ];
 const minSlider = document.getElementById("min-slider");
 const maxSlider = document.getElementById("max-slider");
@@ -71,6 +80,7 @@ let pdfData = []; // array of probability density function values
 let worseThan = []; // array of % of population worse than the result values
 let userValue = undefined; // user score default value
 let betterThan = []; // array of % of population better than the result values
+let userOriginalValue = undefined; // when user change slider value can changed too
 
 // * FUNCTION * //
 // set legend title based on scale. Used when scale is changed
@@ -203,6 +213,8 @@ function replaceData() {
 function setUserValue(value) {
     // set the global user value
     userValue = Math.floor(value);
+    userOriginalValue = userValue;
+
     // trim the value if it exceed the scale range
     if (userValue >= scale.max) userValue = scale.max;
     if (userValue <= scale.min) userValue = scale.min;
@@ -225,11 +237,16 @@ function setUserValue(value) {
 // switch to the new scale of given value
 function switchToScale(value) {
     if (scales[value]) {
+        // hide the custom section
+        document.getElementById("controls").classList.add("hidden");
         // set global scale value
         scale = scales[value];
         // convert previous user score to new scale
-        userValue = Math.round(sigmaToScale(userStd, scale));
-
+        if (userValue !== userOriginalValue) {
+            userValue = userOriginalValue;
+        } else {
+            userValue = Math.round(sigmaToScale(userStd, scale));
+        }
         replaceData();
 
         // user can just switch scales without providing own score
@@ -243,23 +260,30 @@ function switchToScale(value) {
         // push the new title
         myChart.update();
     }
+
+    // if custom then make the custom section visible
+    if (value == "6") {
+        document.getElementById("controls").classList.remove("hidden");
+    }
 }
 
 // * INIT * //
 // create the initial data from default scale
 seedData(scale);
 
-// hookers on the mean and std dev sliders
+// hookers for the custom slider
 meanSlider.oninput = () => {
-    scale.mean = parseInt(meanSlider.value);
+    scale.mean = parseInt(meanSlider.value) / 100;
     replaceData();
+    setUserValue(userOriginalValue);
     myChart.options.plugins.legend.title.text = setLegendTitle(scale);
     myChart.update();
 };
 
 stdDevSlider.oninput = () => {
-    scale.stdDev = parseInt(stdDevSlider.value);
+    scale.stdDev = parseInt(stdDevSlider.value) / 100;
     replaceData();
+    setUserValue(userOriginalValue);
     myChart.options.plugins.legend.title.text = setLegendTitle(scale);
     myChart.update();
 };
@@ -267,6 +291,7 @@ stdDevSlider.oninput = () => {
 minSlider.oninput = () => {
     scale.min = parseInt(minSlider.value);
     replaceData();
+    setUserValue(userOriginalValue);
     myChart.options.plugins.legend.title.text = setLegendTitle(scale);
     myChart.update();
 };
@@ -274,6 +299,7 @@ minSlider.oninput = () => {
 maxSlider.oninput = () => {
     scale.max = parseInt(maxSlider.value);
     replaceData();
+    setUserValue(userOriginalValue);
     myChart.options.plugins.legend.title.text = setLegendTitle(scale);
     myChart.update();
 };

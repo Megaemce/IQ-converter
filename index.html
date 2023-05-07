@@ -36,6 +36,7 @@ https://cdn.jsdelivr.net/npm/mathjs@11.8.0/lib/browser/math.min.js
                             <option value="3">Raven advanced (raw)</option>
                             <option value="4">Raven standard (raw)</option>
                             <option value="5">Otis-Lennon</option>
+                            <option value="6">Custom scale</option>
                         </select>
                         <label for="score"> and your score: </label
                         ><input
@@ -56,19 +57,19 @@ https://cdn.jsdelivr.net/npm/mathjs@11.8.0/lib/browser/math.min.js
         <div class="wrapper">
             <canvas id="myChart"></canvas>
         </div>
-        <div class="controls">
+        <div class="controls hidden" id="controls">
             <div class="sliders">
                 <div class="range">
                     <label for="mean-range">Mean value: </label>
                     <div class="field">
-                        <div class="value left">0</div>
+                        <div class="valu>e left">0</div>
                         <input
                             id="mean-slider"
                             type="range"
                             min="0"
-                            max="140"
+                            max="14000"
                             value="100"
-                            steps="0.1"
+                            steps="1"
                         />
                         <div class="value right">140</div>
                     </div>
@@ -81,7 +82,7 @@ https://cdn.jsdelivr.net/npm/mathjs@11.8.0/lib/browser/math.min.js
                             id="stdDev-slider"
                             type="range"
                             min="0"
-                            max="100"
+                            max="10000"
                             value="0"
                             steps="1"
                         />

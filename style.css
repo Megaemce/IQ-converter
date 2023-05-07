@@ -24,7 +24,12 @@ input {
     border: 1px solid #ccc;
 }
 
+div.hidden {
+    display: none;
+}
+
 div.wrapper {
+    position: relative;
     display: flex;
     flex-direction: row;
     justify-content: space-evenly;
