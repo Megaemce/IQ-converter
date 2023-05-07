@@ -65,31 +65,13 @@ let worseThan = []; // % of population worse than the result
 let userValue = scale.min; // default value is min
 let betterThan = []; // & of population better than the result
 
-// set user value on the chart
-function setUserValue(value) {
-    userValue = Math.floor(value);
-    if (userValue >= scale.max) userValue = scale.max;
-    if (userValue <= scale.min) userValue = scale.min;
-
-    myChart.data.datasets[4].data = [
-        { x: userValue, y: 0 },
-        { x: userValue, y: pdfData[userValue - scale.min].y },
-    ];
-    myChart.data.datasets[4].hidden = false;
-    myChart.options.scales["userScoreX"].display = true;
-
-    // keep std for later scale translation
-    userStd = sigmaValue(userValue, scale);
-    myChart.update();
-}
-
 // set legend title based on scale
 function setLegendTitle(scale) {
     return (
         `${scale.iqScale ? "IQ" : "Point"}` +
         " distribution in " +
         scale.name +
-        "'s scale with value between " +
+        "'s scale with values between " +
         scale.min +
         "-" +
         scale.max +
@@ -98,28 +80,6 @@ function setLegendTitle(scale) {
         " and standard deviation of " +
         scale.stdDev
     );
-}
-
-// switch to the new scale of value
-function switchToScale(value) {
-    if (scales[value]) {
-        scale = scales[value]; // set global value
-        seedData(scale);
-        userValue = Math.round(sigmaToScale(userStd, scale));
-
-        myChart.data.labels = xValues;
-        myChart.data.datasets[0].data = pdfData;
-        myChart.data.datasets[1].data = betterThan;
-        myChart.data.datasets[2].data = worseThan;
-        myChart.data.datasets[3].data = rarity;
-        myChart.data.datasets[4].data = [
-            { x: userValue, y: 0 },
-            // some scales have min bigger than 0 thus causing pdfData[userValue] to go over its range
-            { x: userValue, y: pdfData[userValue - scale.min].y },
-        ];
-        myChart.options.plugins.legend.title.text = setLegendTitle(scale);
-        myChart.update();
-    }
 }
 
 // calculate sigma from the scale in specific scale
@@ -143,7 +103,7 @@ function sigmaToScale(sigma, scale) {
 }
 
 // translate value from one scale to another
-function translateScore(score, oldScale, newScale) {
+function convertScore(score, oldScale, newScale) {
     const sigma = sigmaValue(score, oldScale);
     const result = sigmaToScale(sigma, newScale);
 
@@ -222,8 +182,49 @@ function seedData(scale) {
     }
 }
 
+// switch to the new scale of value
+function switchToScale(value) {
+    if (scales[value]) {
+        scale = scales[value]; // set global value
+        seedData(scale);
+        userValue = Math.round(sigmaToScale(userStd, scale));
+
+        myChart.data.labels = xValues;
+        myChart.data.datasets[0].data = pdfData;
+        myChart.data.datasets[1].data = betterThan;
+        myChart.data.datasets[2].data = worseThan;
+        myChart.data.datasets[3].data = rarity;
+        myChart.data.datasets[4].data = [
+            { x: userValue, y: 0 },
+            // some scales have min bigger than 0 thus causing pdfData[userValue] to go over its range
+            { x: userValue, y: pdfData[userValue - scale.min].y },
+        ];
+        myChart.options.plugins.legend.title.text = setLegendTitle(scale);
+        myChart.update();
+    }
+}
+
+// set user value on the chart
+function setUserValue(value) {
+    userValue = Math.floor(value);
+    if (userValue >= scale.max) userValue = scale.max;
+    if (userValue <= scale.min) userValue = scale.min;
+
+    myChart.data.datasets[4].data = [
+        { x: userValue, y: 0 },
+        { x: userValue, y: pdfData[userValue - scale.min].y },
+    ];
+    myChart.data.datasets[4].hidden = false;
+    myChart.options.scales["userScoreX"].display = true;
+
+    // keep std for later scale translation
+    userStd = sigmaValue(userValue, scale);
+    myChart.update();
+}
+
 // create the chart
 seedData(scale);
+
 let ctx = document.getElementById("myChart").getContext("2d");
 let myChart = new Chart(ctx, {
     type: "line",
@@ -263,7 +264,7 @@ let myChart = new Chart(ctx, {
                 borderColor: "#7fb685",
                 backgroundColor: "#7fb685",
                 hidden: true,
-                order: 3,
+                order: 4,
             },
             {
                 label: "Worse than",
@@ -275,10 +276,10 @@ let myChart = new Chart(ctx, {
                 borderColor: "#ec4e20",
                 backgroundColor: "#ec4e20",
                 hidden: true,
-                order: 4,
+                order: 3,
             },
             {
-                label: "Rarity",
+                label: "Rarity (log)",
                 data: rarity,
                 radius: 2,
                 borderWidth: 1,
@@ -296,7 +297,6 @@ let myChart = new Chart(ctx, {
                     { x: 0, y: 0 },
                     { x: 0, y: 0 },
                 ],
-                //maxBarThickness: 4,
                 backgroundColor: "#00d4ff",
                 borderColor: "#00d4ff",
                 xAxisID: "userScoreX",
@@ -316,7 +316,22 @@ let myChart = new Chart(ctx, {
                 title: {
                     display: true,
                     text: setLegendTitle(scale),
+                    padding: {
+                        bottom: 10,
+                    },
+                    font: {
+                        size: 14,
+                        family: "Verdana, Geneva, Tahoma, sans-serif",
+                    },
                 },
+                labels: {
+                    font: {
+                        size: 12,
+                        family: "Verdana, Geneva, Tahoma, sans-serif",
+                    },
+                    // borderRadius: 10,
+                },
+                reverse: true,
             },
             tooltip: {
                 callbacks: {
@@ -336,7 +351,7 @@ let myChart = new Chart(ctx, {
                                     .toLocaleString("pl") +
                                 " people"
                             );
-                        } else if (label === "Rarity") {
+                        } else if (label === "Rarity (log)") {
                             return (
                                 label +
                                 ": " +
@@ -375,6 +390,10 @@ let myChart = new Chart(ctx, {
                         });
 
                         return omega;
+                    },
+                    font: {
+                        size: 12,
+                        family: "Verdana, Geneva, Tahoma, sans-serif",
                     },
                 },
                 position: "bottom",
@@ -424,6 +443,10 @@ let myChart = new Chart(ctx, {
                         if (xValue === userValue) return `You (${xValue})`;
                         return undefined;
                     },
+                },
+                font: {
+                    size: 12,
+                    family: "Verdana, Geneva, Tahoma, sans-serif",
                 },
             },
         },
