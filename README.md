@@ -1,4 +1,5 @@
-Hey there 👋  
+<h2> Hey there 👋</h2>
+  
 I recently got my IQ result from malesian Mensa however I was not able to undestand how they calculate it based on my score from Raven's Advanced Progressive Matrices test (they still use it in Malesia). Mensa rejected my questions regards to mean, standard deviation and my raw result.
 
 I looked around for different explanation and hence I was still not able to understand it fully I decided to build my own tool to convert scores from different scales.
