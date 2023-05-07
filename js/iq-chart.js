@@ -31,8 +31,8 @@ const scales = [
     {
         name: "RAPM",
         step: 1,
-        mean: 17.2, // original 17
-        stdDev: 5.14, // original 5.14
+        mean: 17.2,
+        stdDev: 5.14,
         min: 0,
         max: 36,
         iqScale: false,
