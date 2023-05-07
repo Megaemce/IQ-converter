@@ -31,8 +31,8 @@ const scales = [
     {
         name: "RAPM",
         step: 1,
-        mean: 17.2,
-        stdDev: 5.14,
+        mean: 17,
+        stdDev: 5.29,
         min: 0,
         max: 36,
         iqScale: false,
@@ -55,7 +55,20 @@ const scales = [
         max: 164,
         iqScale: false,
     },
+    {
+        name: "Custom",
+        step: 1,
+        mean: 100,
+        stdDev: 15,
+        min: 0,
+        max: 180,
+        iqScale: true,
+    },
 ];
+const minSlider = document.getElementById("min-slider");
+const maxSlider = document.getElementById("max-slider");
+const meanSlider = document.getElementById("mean-slider");
+const stdDevSlider = document.getElementById("stdDev-slider");
 
 // * GLOBAL VARIABLES * //
 let scale = scales[0]; // choosen scale
@@ -67,6 +80,7 @@ let pdfData = []; // array of probability density function values
 let worseThan = []; // array of % of population worse than the result values
 let userValue = undefined; // user score default value
 let betterThan = []; // array of % of population better than the result values
+let userOriginalValue = undefined; // when user change slider value can changed too
 
 // * FUNCTION * //
 // set legend title based on scale. Used when scale is changed
@@ -184,10 +198,23 @@ function seedData(scale) {
     }
 }
 
+// seed and replace data
+function replaceData() {
+    seedData(scale);
+    // push the new data into chart
+    myChart.data.labels = xValues;
+    myChart.data.datasets[0].data = pdfData;
+    myChart.data.datasets[1].data = betterThan;
+    myChart.data.datasets[2].data = worseThan;
+    myChart.data.datasets[3].data = rarity;
+}
+
 // set user value on the chart. Used by score input
 function setUserValue(value) {
     // set the global user value
     userValue = Math.floor(value);
+    userOriginalValue = userValue;
+
     // trim the value if it exceed the scale range
     if (userValue >= scale.max) userValue = scale.max;
     if (userValue <= scale.min) userValue = scale.min;
@@ -210,33 +237,70 @@ function setUserValue(value) {
 // switch to the new scale of given value
 function switchToScale(value) {
     if (scales[value]) {
+        // hide the custom section
+        document.getElementById("controls").classList.add("hidden");
         // set global scale value
         scale = scales[value];
-        // recalculate the data
-        seedData(scale);
         // convert previous user score to new scale
         userValue = Math.round(sigmaToScale(userStd, scale));
 
-        // push the new data into chart
-        myChart.data.labels = xValues;
-        myChart.data.datasets[0].data = pdfData;
-        myChart.data.datasets[1].data = betterThan;
-        myChart.data.datasets[2].data = worseThan;
-        myChart.data.datasets[3].data = rarity;
-        myChart.data.datasets[4].data = [
-            { x: userValue, y: 0 },
-            // some scales have min ≥ 0 thus causing pdfData[userValue] to exceed its range
-            { x: userValue, y: pdfData[userValue - scale.min].y },
-        ];
+        replaceData();
+
+        // user can just switch scales without providing own score
+        if (userValue) {
+            myChart.data.datasets[4].data = [
+                { x: userValue, y: 0 },
+                // some scales have min ≥ 0 thus causing pdfData[userValue] to exceed its range
+                { x: userValue, y: pdfData[userValue - scale.min].y },
+            ];
+        }
         // push the new title
         myChart.options.plugins.legend.title.text = setLegendTitle(scale);
         myChart.update();
+    }
+
+    // if custom then make the custom section visible
+    if (value == "6") {
+        document.getElementById("controls").classList.remove("hidden");
     }
 }
 
 // * INIT * //
 // create the initial data from default scale
 seedData(scale);
+
+// hookers for the custom slider
+meanSlider.oninput = () => {
+    scale.mean = parseInt(meanSlider.value) / 100;
+    replaceData();
+    if (userOriginalValue) setUserValue(userOriginalValue);
+    myChart.options.plugins.legend.title.text = setLegendTitle(scale);
+    myChart.update();
+};
+
+stdDevSlider.oninput = () => {
+    scale.stdDev = parseInt(stdDevSlider.value) / 100;
+    replaceData();
+    if (userOriginalValue) setUserValue(userOriginalValue);
+    myChart.options.plugins.legend.title.text = setLegendTitle(scale);
+    myChart.update();
+};
+
+minSlider.oninput = () => {
+    scale.min = parseInt(minSlider.value);
+    replaceData();
+    if (userOriginalValue) setUserValue(userOriginalValue);
+    myChart.options.plugins.legend.title.text = setLegendTitle(scale);
+    myChart.update();
+};
+
+maxSlider.oninput = () => {
+    scale.max = parseInt(maxSlider.value);
+    replaceData();
+    if (userOriginalValue) setUserValue(userOriginalValue);
+    myChart.options.plugins.legend.title.text = setLegendTitle(scale);
+    myChart.update();
+};
 
 // create the chart using seeded data
 let ctx = document.getElementById("myChart").getContext("2d");

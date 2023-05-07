@@ -24,8 +24,82 @@ input {
     border: 1px solid #ccc;
 }
 
+div.hidden {
+    display: none;
+}
+
 div.wrapper {
-    width: 80%;
-    height: 80%;
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    height: 70vh; /* vh refers to viewport height */
+    align-items: center;
     padding-top: 40px;
+    padding-bottom: 40px;
+}
+
+.controls {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    align-items: center;
+}
+
+.sliders {
+    padding-top: 20px;
+}
+
+/* Range slider container */
+.range {
+    display: flex;
+    flex-direction: row;
+    justify-content: left;
+    align-items: center;
+}
+
+/* Slider field container */
+.field {
+    display: flex;
+    align-items: center;
+    padding-left: 10px;
+}
+
+/* Slider value on left side */
+.value.left {
+    margin-right: 20px;
+}
+
+/* Slider value on right side */
+.value.right {
+    margin-left: 20px;
+}
+
+/* Range slider track */
+input[type="range"] {
+    width: 100%;
+    height: 10px;
+    background-color: #ddd;
+    border-radius: 5px;
+    outline: none;
+}
+
+/* Range slider thumb */
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    background-color: #4caf50;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+/* Range slider thumb on hover */
+input[type="range"]::-webkit-slider-thumb:hover {
+    background-color: #3e8e41;
+}
+
+/* Range slider thumb on active state */
+input[type="range"]::-webkit-slider-thumb:active {
+    transform: scale(1.2);
 }

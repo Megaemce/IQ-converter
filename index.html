@@ -36,6 +36,7 @@ https://cdn.jsdelivr.net/npm/mathjs@11.8.0/lib/browser/math.min.js
                             <option value="3">Raven advanced (raw)</option>
                             <option value="4">Raven standard (raw)</option>
                             <option value="5">Otis-Lennon</option>
+                            <option value="6">Custom scale</option>
                         </select>
                         <label for="score"> and your score: </label
                         ><input
@@ -55,6 +56,72 @@ https://cdn.jsdelivr.net/npm/mathjs@11.8.0/lib/browser/math.min.js
         </div>
         <div class="wrapper">
             <canvas id="myChart"></canvas>
+        </div>
+        <div class="controls hidden" id="controls">
+            <div class="sliders">
+                <div class="range">
+                    <label for="mean-range">Mean value:</label>
+                    <div class="field">
+                        <div class="value left">0</div>
+                        <input
+                            id="mean-slider"
+                            type="range"
+                            min="0"
+                            max="14000"
+                            value="10000"
+                            steps="1"
+                        />
+                        <div class="value right">140</div>
+                    </div>
+                </div>
+                <div class="range">
+                    <label for="stdDev-range">StdDev value:</label>
+                    <div class="field">
+                        <div class="value left">0</div>
+                        <input
+                            id="stdDev-slider"
+                            type="range"
+                            min="0"
+                            max="10000"
+                            value="1500"
+                            steps="1"
+                        />
+                        <div class="value right">100</div>
+                    </div>
+                </div>
+            </div>
+            <div class="sliders">
+                <div class="range">
+                    <label for="min-range">Min value:</label>
+                    <div class="field">
+                        <div class="value left">0</div>
+                        <input
+                            id="min-slider"
+                            type="range"
+                            min="0"
+                            max="250"
+                            value="0"
+                            steps="1"
+                        />
+                        <div class="value right">250</div>
+                    </div>
+                </div>
+                <div class="range">
+                    <label for="max-range">Max value: </label>
+                    <div class="field">
+                        <div class="value left">0</div>
+                        <input
+                            id="max-slider"
+                            type="range"
+                            min="0"
+                            max="250"
+                            value="180"
+                            steps="1"
+                        />
+                        <div class="value right">250</div>
+                    </div>
+                </div>
+            </div>
         </div>
         <script src="js/iq-chart.js"></script>
     </body>
