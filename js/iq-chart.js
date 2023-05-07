@@ -40,7 +40,7 @@ const scales = [
     {
         name: "RSPM",
         step: 1,
-        mean: 47,
+        mean: 51.32,
         stdDev: 4.69,
         min: 16,
         max: 60,
@@ -225,7 +225,7 @@ function setUserValue(value) {
         { x: userValue, y: pdfData[userValue - scale.min].y },
     ];
 
-    // by default when the value is not set is hidden
+    // by default when the value is not set the x axe is hidden
     myChart.data.datasets[4].hidden = false;
     myChart.options.scales["userScoreX"].display = true;
 
