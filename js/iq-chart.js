@@ -56,6 +56,10 @@ const scales = [
         iqScale: false,
     },
 ];
+const meanValue = document.getElementById("mean-value");
+const meanSlider = document.getElementById("mean-slider");
+const stdDevValue = document.getElementById("stdDev-value");
+const stdDevSlider = document.getElementById("stdDev-slider");
 
 // * GLOBAL VARIABLES * //
 let scale = scales[0]; // choosen scale
@@ -184,6 +188,17 @@ function seedData(scale) {
     }
 }
 
+// seed and replace data
+function replaceData() {
+    seedData(scale);
+    // push the new data into chart
+    myChart.data.labels = xValues;
+    myChart.data.datasets[0].data = pdfData;
+    myChart.data.datasets[1].data = betterThan;
+    myChart.data.datasets[2].data = worseThan;
+    myChart.data.datasets[3].data = rarity;
+}
+
 // set user value on the chart. Used by score input
 function setUserValue(value) {
     // set the global user value
@@ -212,24 +227,20 @@ function switchToScale(value) {
     if (scales[value]) {
         // set global scale value
         scale = scales[value];
-        // recalculate the data
-        seedData(scale);
         // convert previous user score to new scale
         userValue = Math.round(sigmaToScale(userStd, scale));
 
-        // push the new data into chart
-        myChart.data.labels = xValues;
-        myChart.data.datasets[0].data = pdfData;
-        myChart.data.datasets[1].data = betterThan;
-        myChart.data.datasets[2].data = worseThan;
-        myChart.data.datasets[3].data = rarity;
-        myChart.data.datasets[4].data = [
-            { x: userValue, y: 0 },
-            // some scales have min ≥ 0 thus causing pdfData[userValue] to exceed its range
-            { x: userValue, y: pdfData[userValue - scale.min].y },
-        ];
+        replaceData();
+
+        // user can just switch scales without providing own score
+        if (userValue) {
+            myChart.data.datasets[4].data = [
+                { x: userValue, y: 0 },
+                // some scales have min ≥ 0 thus causing pdfData[userValue] to exceed its range
+                { x: userValue, y: pdfData[userValue - scale.min].y },
+            ];
+        }
         // push the new title
-        myChart.options.plugins.legend.title.text = setLegendTitle(scale);
         myChart.update();
     }
 }
@@ -237,6 +248,21 @@ function switchToScale(value) {
 // * INIT * //
 // create the initial data from default scale
 seedData(scale);
+
+// hookers on the mean and std dev sliders
+meanSlider.oninput = () => {
+    scale.mean = parseInt(meanSlider.value);
+    replaceData();
+    myChart.options.plugins.legend.title.text = setLegendTitle(scale);
+    myChart.update();
+};
+
+stdDevSlider.oninput = () => {
+    scale.stdDev = parseInt(stdDevSlider.value);
+    replaceData();
+    myChart.options.plugins.legend.title.text = setLegendTitle(scale);
+    myChart.update();
+};
 
 // create the chart using seeded data
 let ctx = document.getElementById("myChart").getContext("2d");
