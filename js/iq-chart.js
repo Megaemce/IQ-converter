@@ -28,7 +28,7 @@ const scales = [
         iqScale: true,
     },
     {
-        name: "Raven advanced (raw score)",
+        name: "Raven's advanced progressive matrices",
         step: 1,
         mean: 17.2, // original 17
         stdDev: 5.14, // original 5.14
@@ -37,7 +37,7 @@ const scales = [
         iqScale: false,
     },
     {
-        name: "Raven standard (raw score)",
+        name: "Raven's standard progressive matrices",
         step: 1,
         mean: 47,
         stdDev: 4.69,
@@ -65,12 +65,11 @@ let worseThan = []; // % of population worse than the result
 let userValue = scale.min; // default value is min
 let betterThan = []; // & of population better than the result
 
+// set user value on the chart
 function setUserValue(value) {
     userValue = Math.floor(value);
     if (userValue >= scale.max) userValue = scale.max;
     if (userValue <= scale.min) userValue = scale.min;
-
-    console.log(userValue);
 
     myChart.data.datasets[4].data = [
         { x: userValue, y: 0 },
@@ -101,8 +100,8 @@ function setLegendTitle(scale) {
     );
 }
 
-// change scale to new value
-function setScale(value) {
+// switch to the new scale of value
+function switchToScale(value) {
     if (scales[value]) {
         scale = scales[value]; // set global value
         seedData(scale);
@@ -123,6 +122,7 @@ function setScale(value) {
     }
 }
 
+// calculate sigma from the scale in specific scale
 function scoreToSigma(score, scale) {
     return (score - scale.mean) / scale.stdDev;
 }
