@@ -65,10 +65,6 @@ const scales = [
         iqScale: false,
     },
 ];
-const minSlider = document.getElementById("min-slider");
-const maxSlider = document.getElementById("max-slider");
-const meanSlider = document.getElementById("mean-slider");
-const stdDevSlider = document.getElementById("stdDev-slider");
 
 // * GLOBAL VARIABLES * //
 let scale = scales[0]; // choosen scale
